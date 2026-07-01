@@ -18,6 +18,7 @@
 //     }
 // }
 
+import User from "../models/user.js";
 
 export const protect = async (req, res, next) => {
     const { userId } = req.auth();
