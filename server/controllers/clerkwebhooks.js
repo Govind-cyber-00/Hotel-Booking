@@ -11,26 +11,23 @@ const clerkWebhooks = async (req, res) => {
       "svix-signature": req.headers["svix-signature"],
     };
 
+    // Verify webhook
     await whook.verify(JSON.stringify(req.body), headers);
 
+    // Get data from request body
     const { data, type } = req.body;
-
-    console.log("Webhook Type:", type);
-    console.log("Webhook Data:", data);
 
     const userData = {
       _id: data.id,
-      username: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
       email: data.email_addresses?.[0]?.email_address,
+      username: `${data.first_name || ""} ${data.last_name || ""}`.trim(),
       image: data.image_url,
     };
 
-    console.log("User Data:", userData);
-
+    // Handle different webhook events
     switch (type) {
       case "user.created":
-        const user = await User.create(userData);
-        console.log("User Saved:", user);
+        await User.create(userData);
         break;
 
       case "user.updated":
@@ -42,16 +39,18 @@ const clerkWebhooks = async (req, res) => {
         break;
 
       default:
-        console.log(type);
+        console.log(`Unhandled event type: ${type}`);
+        break;
     }
 
-    res.json({
+    return res.status(200).json({
       success: true,
-      message: "Webhook Success",
+      message: "Webhook received successfully",
     });
   } catch (error) {
-    console.log("WEBHOOK ERROR:", error);
-    res.status(500).json({
+    console.error(error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
